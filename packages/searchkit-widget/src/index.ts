@@ -140,6 +140,15 @@ export function mountSearchWidget(
           <input class="sk-input" type="search" autocomplete="off" />
         </label>
         <div class="sk-results"><div class="sk-empty">Type to search...</div></div>
+        <div class="sk-footer">
+          <a
+            class="sk-powered-by"
+            href="https://github.com/karlhills/searchkit"
+            target="_blank"
+            rel="noreferrer noopener"
+            >Powered by SearchKit</a
+          >
+        </div>
       </div>
     </div>
   `;

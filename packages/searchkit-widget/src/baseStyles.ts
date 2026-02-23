@@ -64,6 +64,24 @@ export const BASE_STYLES = `
   padding: 0.3rem;
 }
 
+.sk-footer {
+  border-top: 1px solid var(--sk-border);
+  padding: 0.5rem 1rem 0.65rem;
+  text-align: right;
+}
+
+.sk-powered-by {
+  color: var(--sk-muted);
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.sk-powered-by:hover,
+.sk-powered-by:focus-visible {
+  color: var(--sk-accent);
+  text-decoration: underline;
+}
+
 .sk-empty {
   color: var(--sk-muted);
   font-size: 0.95rem;
