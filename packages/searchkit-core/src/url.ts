@@ -1,7 +1,27 @@
 import path from "node:path";
 
+function stripOrigin(baseUrl: string): string {
+  if (baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
+    try {
+      return new URL(baseUrl).pathname || "/";
+    } catch {
+      return baseUrl;
+    }
+  }
+
+  if (baseUrl.startsWith("//")) {
+    try {
+      return new URL(`https:${baseUrl}`).pathname || "/";
+    } catch {
+      return baseUrl;
+    }
+  }
+
+  return baseUrl;
+}
+
 export function normalizeBaseUrl(baseUrl: string): string {
-  const trimmed = baseUrl.trim();
+  const trimmed = stripOrigin(baseUrl.trim());
   if (!trimmed || trimmed === "/") {
     return "/";
   }
