@@ -2,9 +2,9 @@
 
 Search Kit is an OSS toolkit for static-site search:
 
-- `searchkit` CLI builds a compact JSON index during your build.
-- `@searchkit/client` is a headless browser search engine.
-- `@searchkit/widget` provides a drop-in modal search UI (`Cmd+K` or `/`).
+- `searchkit` CLI builds a compact search index during your build.
+- `@searchkit/client` is a headless browser engine with lazy shard loading.
+- `@searchkit/widget` is a drop-in modal search UI (`Cmd+K` or `/`).
 
 ## Install
 
@@ -21,42 +21,47 @@ Node `18+` is required.
 pnpm searchkit build --input ./dist --output ./dist/search --baseUrl /
 ```
 
-Generated files:
+Sharded output (default):
 
 - `dist/search/index.meta.json`
 - `dist/search/docs.json`
-- `dist/search/index.inv.json`
+- `dist/search/inv/*.json`
 
-### CLI options
+## CLI usage
 
 ```bash
 searchkit build --input <dir> --output <dir> [options]
 ```
 
+Flags:
+
 - `--input <dir>` (required): input HTML directory (for example `./dist`)
 - `--output <dir>` (required): output directory for search files (for example `./dist/search`)
 - `--baseUrl <url>` (default: `/`): site base path
+- `--[no-]shard` (default: `true`): enable/disable sharded output (`v2` / `v1`)
+- `--shardPrefixLen <n>` (default: `2`): shard key prefix length (currently only `2` supported)
+- `--maxShardTerms <n>` (default: `50000`): soft warning threshold for largest shard size
 - `--urlMode <mode>` (default: `pretty`): `pretty | html`
-- `--include <glob>` (default: `"**/*.html"`): included files glob
-- `--exclude <glob>` (default: `"**/search/**"`): excluded files glob
+- `--include <glob>` (default: `'**/*.html'`): included files glob
+- `--exclude <glob>` (default: `'**/search/**'`): excluded files glob
 - `--verbose` (default: `false`): print skipped files
 - `-h, --help`: show command help
 - `-V, --version`: show CLI version
 
-`baseUrl` can be a path (`/`, `/docs/`) or a full URL (`https://example.com/docs/`); full URLs are normalized to their pathname.
+`baseUrl` can be a path (`/`, `/docs/`) or a full URL (`https://example.com/docs/`); full URLs are normalized to pathname.
 
-Use `--urlMode html` if your host does not support extensionless pretty URLs. This emits links like
+Use `--urlMode html` if your host does not support extensionless routes. This emits links like
 `/about.html` and `/guide/intro/index.html` instead of `/about` and `/guide/intro/`.
 
 ## Widget usage (drop-in)
 
-Install package:
+Install:
 
 ```bash
 pnpm add @searchkit/widget @searchkit/client
 ```
 
-Use in browser:
+Browser/global usage:
 
 ```html
 <script src="/assets/searchkit-widget.global.js"></script>
@@ -75,11 +80,11 @@ mountSearchWidget(containerOrSelector?, options?)
 ```
 
 - `containerOrSelector` (optional): `string | Element` (default: `document.body`)
-- `options.metaUrl` (default: `"/search/index.meta.json"`): URL to index meta
-- `options.placeholder` (default: `"Search docs..."`): input placeholder
-- `options.hotkeys` (default: `["Meta+K", "/"]`): hotkeys that open modal
-- `options.maxResults` (default: `8`): max results rendered
-- `options.theme` (optional): color overrides
+- `options.metaUrl` (default: `'/search/index.meta.json'`)
+- `options.placeholder` (default: `'Search docs...'`)
+- `options.hotkeys` (default: `['Meta+K', '/']`)
+- `options.maxResults` (default: `8`)
+- `options.theme` (optional):
 - `options.theme.bg`
 - `options.theme.fg`
 - `options.theme.border`
@@ -89,13 +94,17 @@ mountSearchWidget(containerOrSelector?, options?)
 
 Return value:
 
-- `handle.open()`: open modal programmatically
-- `handle.close()`: close modal programmatically
-- `handle.destroy()`: unmount widget and listeners
+- `handle.open()`
+- `handle.close()`
+- `handle.destroy()`
 
-The widget footer includes a built-in "Powered by SearchKit" link to `https://github.com/karlhills/searchkit`.
+Behavior notes:
 
-Theme variables:
+- On open/focus, widget prewarms shard loads for current input.
+- Input search is debounced (~100ms).
+- Existing results stay visible while new shard requests are loading.
+
+Theme CSS variables:
 
 - `--sk-bg`
 - `--sk-fg`
@@ -104,26 +113,39 @@ Theme variables:
 - `--sk-accent`
 - `--sk-muted`
 
+The widget footer includes a built-in `Powered by SearchKit` link to `https://github.com/karlhills/searchkit`.
+
 ## Client usage (headless)
 
 ```ts
 import { createSearch } from "@searchkit/client";
 
-const engine = await createSearch({ metaUrl: "/search/index.meta.json" });
-const results = await engine.query("hello world", { limit: 10, highlight: true });
+const engine = await createSearch({
+  metaUrl: "/search/index.meta.json",
+  maxShardCache: 30
+});
+
+const results = await engine.query("hello world", {
+  limit: 10,
+  highlight: true,
+  maxTokens: 10
+});
+
+await engine.prewarm("hello world");
 ```
 
 ### `createSearch` API
 
-- `createSearch({ metaUrl, fetcher? })`
+- `createSearch({ metaUrl, fetcher?, maxShardCache? })`
 - `metaUrl` (required): URL to `index.meta.json`
 - `fetcher` (optional): custom fetch implementation
+- `maxShardCache` (default: `30`): number of loaded shards to retain in memory (LRU)
 
 ### `engine.query` options
 
-- `query(text, { limit?, highlight? })`
 - `limit` (default: `10`)
-- `highlight` (default: `false`) wraps excerpt token matches with `<mark>`
+- `highlight` (default: `false`)
+- `maxTokens` (default: `10`)
 
 Result shape:
 
@@ -135,39 +157,53 @@ Result shape:
 
 ## Index format
 
-`index.meta.json`
+### `index.meta.json` v2 (sharded)
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "generatedAt": "ISO-8601",
   "baseUrl": "/",
   "docCount": 3,
-  "inv": { "path": "index.inv.json" },
-  "docs": { "path": "docs.json" }
-}
-```
-
-`docs.json` contains documents with `id`, `url`, `title`, `headings`, `excerpt`.
-
-`index.inv.json` contains an inverted index:
-
-```json
-{
-  "terms": {
-    "token": [
-      [0, 8],
-      [2, 3]
-    ]
+  "docs": { "path": "docs.json" },
+  "inv": {
+    "sharding": {
+      "strategy": "prefix2",
+      "shardPrefixLen": 2,
+      "fallbackShard": "_other",
+      "map": {
+        "ab": "inv/ab.json",
+        "ze": "inv/ze.json",
+        "_other": "inv/_other.json"
+      }
+    }
   }
 }
 ```
 
-Weighting:
+### Shard file format
+
+`inv/ab.json`:
+
+```json
+{
+  "terms": {
+    "abacus": [[0, 8]],
+    "ability": [[1, 3]]
+  }
+}
+```
+
+### v1 backward compatibility
+
+If `version` is `1`, client falls back to single-file inverted index via `inv.path`.
+
+## Scoring
 
 - title token: `+5`
 - heading token: `+3`
 - body token: `+1`
+- multi-token match bonus: `+2` per additional matched query token
 
 ## Excluding content from indexing
 

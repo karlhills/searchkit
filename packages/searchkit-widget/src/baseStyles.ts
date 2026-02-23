@@ -49,6 +49,12 @@ export const BASE_STYLES = `
   letter-spacing: 0.02em;
 }
 
+.sk-status {
+  margin-left: auto;
+  min-width: 4.5rem;
+  text-align: right;
+}
+
 .sk-input {
   width: 100%;
   border: 0;
@@ -62,6 +68,18 @@ export const BASE_STYLES = `
   max-height: 60vh;
   overflow: auto;
   padding: 0.3rem;
+  position: relative;
+}
+
+.sk-results[data-loading="true"]::before {
+  content: "";
+  position: sticky;
+  top: 0;
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--sk-accent), transparent);
+  opacity: 0.8;
 }
 
 .sk-footer {

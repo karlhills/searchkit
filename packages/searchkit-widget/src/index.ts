@@ -28,6 +28,7 @@ export interface SearchWidgetHandle {
 }
 
 const DEFAULT_HOTKEYS: Hotkey[] = ["Meta+K", "/"];
+const INPUT_DEBOUNCE_MS = 100;
 
 function escapeHtml(value: string): string {
   return value
@@ -138,6 +139,7 @@ export function mountSearchWidget(
         <label class="sk-input-wrap">
           <span>Search</span>
           <input class="sk-input" type="search" autocomplete="off" />
+          <span class="sk-status" aria-live="polite"></span>
         </label>
         <div class="sk-results"><div class="sk-empty">Type to search...</div></div>
         <div class="sk-footer">
@@ -156,8 +158,9 @@ export function mountSearchWidget(
   const overlay = host.querySelector<HTMLElement>(".sk-overlay");
   const input = host.querySelector<HTMLInputElement>(".sk-input");
   const resultsRoot = host.querySelector<HTMLElement>(".sk-results");
+  const status = host.querySelector<HTMLElement>(".sk-status");
 
-  if (!overlay || !input || !resultsRoot) {
+  if (!overlay || !input || !resultsRoot || !status) {
     throw new Error("Failed to initialize search widget");
   }
   input.placeholder = placeholder;
@@ -168,6 +171,8 @@ export function mountSearchWidget(
   let results: SearchResult[] = [];
   let lastFocused: HTMLElement | null = null;
   let requestId = 0;
+  let hasFocused = false;
+  let debounceTimer: number | undefined;
 
   const navigate = (url: string): void => {
     window.location.href = url;
@@ -194,29 +199,63 @@ export function mountSearchWidget(
     resultsRoot.innerHTML = items;
   };
 
+  const setLoadingState = (loading: boolean): void => {
+    resultsRoot.dataset.loading = loading ? "true" : "false";
+    status.textContent = loading ? "Loading…" : "";
+  };
+
+  const prewarmCurrentInput = async (): Promise<void> => {
+    const value = input.value.trim();
+    if (!value) {
+      return;
+    }
+
+    const engine = await enginePromise;
+    await engine.prewarm(value);
+  };
+
   const runSearch = async (): Promise<void> => {
     const query = input.value.trim();
     if (!query) {
       results = [];
       selectedIndex = 0;
       resultsRoot.innerHTML = '<div class="sk-empty">Type to search...</div>';
+      setLoadingState(false);
       return;
     }
 
     const current = ++requestId;
-    const engine = await enginePromise;
-    const nextResults = await engine.query(query, {
-      limit: maxResults,
-      highlight: true
-    });
+    setLoadingState(true);
 
-    if (current !== requestId) {
-      return;
+    try {
+      const engine = await enginePromise;
+      const nextResults = await engine.query(query, {
+        limit: maxResults,
+        highlight: true
+      });
+
+      if (current !== requestId) {
+        return;
+      }
+
+      results = nextResults;
+      selectedIndex = 0;
+      renderResults();
+    } finally {
+      if (current === requestId) {
+        setLoadingState(false);
+      }
+    }
+  };
+
+  const scheduleSearch = (): void => {
+    if (debounceTimer !== undefined) {
+      window.clearTimeout(debounceTimer);
     }
 
-    results = nextResults;
-    selectedIndex = 0;
-    renderResults();
+    debounceTimer = window.setTimeout(() => {
+      void runSearch();
+    }, INPUT_DEBOUNCE_MS);
   };
 
   const openModal = (): void => {
@@ -229,6 +268,7 @@ export function mountSearchWidget(
     overlay.dataset.open = "true";
     input.focus();
     input.select();
+    void prewarmCurrentInput();
   };
 
   const closeModal = (): void => {
@@ -307,6 +347,15 @@ export function mountSearchWidget(
     }
   };
 
+  const onInputFocus = (): void => {
+    if (hasFocused) {
+      return;
+    }
+
+    hasFocused = true;
+    void prewarmCurrentInput();
+  };
+
   const onResultsClick = (event: MouseEvent): void => {
     const target =
       event.target instanceof Element ? event.target.closest<HTMLElement>(".sk-item") : null;
@@ -326,8 +375,9 @@ export function mountSearchWidget(
   document.addEventListener("keydown", onDocumentKeyDown);
   overlay.addEventListener("click", onOverlayClick);
   input.addEventListener("keydown", onInputKeyDown);
+  input.addEventListener("focus", onInputFocus);
   const onInput = () => {
-    void runSearch();
+    scheduleSearch();
   };
   input.addEventListener("input", onInput);
   resultsRoot.addEventListener("click", onResultsClick);
@@ -337,8 +387,12 @@ export function mountSearchWidget(
       document.removeEventListener("keydown", onDocumentKeyDown);
       overlay.removeEventListener("click", onOverlayClick);
       input.removeEventListener("keydown", onInputKeyDown);
+      input.removeEventListener("focus", onInputFocus);
       input.removeEventListener("input", onInput);
       resultsRoot.removeEventListener("click", onResultsClick);
+      if (debounceTimer !== undefined) {
+        window.clearTimeout(debounceTimer);
+      }
       host.remove();
     },
     open: openModal,

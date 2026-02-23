@@ -23,4 +23,4 @@ The generated search files are:
 
 - `dist/search/index.meta.json`
 - `dist/search/docs.json`
-- `dist/search/index.inv.json`
+- `dist/search/inv/*.json`

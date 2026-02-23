@@ -25,7 +25,10 @@ if (!fs.existsSync(cliPath)) {
 
 fs.copyFileSync(widgetBundle, path.join(distDir, "assets", "searchkit-widget.global.js"));
 
-execSync(`node ${cliPath} build --input ./dist --output ./dist/search --baseUrl /`, {
-  cwd: projectRoot,
-  stdio: "inherit"
-});
+execSync(
+  `node ${cliPath} build --input ./dist --output ./dist/search --baseUrl / --shardPrefixLen 2`,
+  {
+    cwd: projectRoot,
+    stdio: "inherit"
+  }
+);

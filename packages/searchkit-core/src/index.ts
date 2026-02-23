@@ -1,3 +1,4 @@
+export * from "./shards";
 export * from "./stopwords";
 export * from "./text";
 export * from "./tokenize";

@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "pretest": "pnpm --filter @searchkit/core build",
     "build": "tsup src/index.ts --dts --format esm,cjs --clean",
     "test": "vitest run",
     "lint": "eslint src --ext .ts"
