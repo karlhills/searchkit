@@ -7,7 +7,8 @@ import {
   extractDocumentFromHtml,
   normalizeBaseUrl,
   type IndexMeta,
-  type IndexableDocument
+  type IndexableDocument,
+  type UrlMode
 } from "@searchkit/core/node";
 import { Command } from "commander";
 import fg from "fast-glob";
@@ -16,6 +17,7 @@ interface BuildOptions {
   input: string;
   output: string;
   baseUrl: string;
+  urlMode: UrlMode;
   include: string;
   exclude: string;
   verbose?: boolean;
@@ -25,6 +27,11 @@ async function runBuild(options: BuildOptions): Promise<void> {
   const inputDir = path.resolve(process.cwd(), options.input);
   const outputDir = path.resolve(process.cwd(), options.output);
   const baseUrl = normalizeBaseUrl(options.baseUrl);
+  const urlMode = options.urlMode;
+
+  if (urlMode !== "pretty" && urlMode !== "html") {
+    throw new Error(`Invalid --urlMode value: ${urlMode}. Use "pretty" or "html".`);
+  }
 
   const htmlFiles = await fg(options.include, {
     cwd: inputDir,
@@ -41,7 +48,8 @@ async function runBuild(options: BuildOptions): Promise<void> {
       filePath,
       html,
       inputRoot: inputDir,
-      baseUrl
+      baseUrl,
+      urlMode
     });
 
     if (!extracted) {
@@ -103,6 +111,7 @@ program
   .requiredOption("--input <dir>", "Input HTML directory")
   .requiredOption("--output <dir>", "Output index directory")
   .option("--baseUrl <url>", "Base URL prefix", "/")
+  .option("--urlMode <mode>", "URL output mode: pretty | html", "pretty")
   .option("--include <glob>", "Glob for included files", "**/*.html")
   .option("--exclude <glob>", "Glob for excluded files", "**/search/**")
   .option("--verbose", "Print skipped files")

@@ -1,4 +1,5 @@
 import path from "node:path";
+import type { UrlMode } from "./types";
 
 function stripOrigin(baseUrl: string): string {
   if (baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
@@ -30,16 +31,21 @@ export function normalizeBaseUrl(baseUrl: string): string {
   return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }
 
-export function mapHtmlFileToUrl(filePath: string, inputRoot: string, baseUrl: string): string {
+export function mapHtmlFileToUrl(
+  filePath: string,
+  inputRoot: string,
+  baseUrl: string,
+  urlMode: UrlMode = "pretty"
+): string {
   const rel = path.relative(inputRoot, filePath).split(path.sep).join("/");
   let routePath = "/";
 
   if (rel === "index.html") {
-    routePath = "/";
+    routePath = urlMode === "html" ? "/index.html" : "/";
   } else if (rel.endsWith("/index.html")) {
-    routePath = `/${rel.slice(0, -"index.html".length)}`;
+    routePath = urlMode === "html" ? `/${rel}` : `/${rel.slice(0, -"index.html".length)}`;
   } else if (rel.endsWith(".html")) {
-    routePath = `/${rel.slice(0, -".html".length)}`;
+    routePath = urlMode === "html" ? `/${rel}` : `/${rel.slice(0, -".html".length)}`;
   }
 
   const normalizedBase = normalizeBaseUrl(baseUrl);

@@ -6,6 +6,8 @@ export interface SearchDocument {
   excerpt: string;
 }
 
+export type UrlMode = "pretty" | "html";
+
 export interface InvertedIndex {
   terms: Record<string, Array<[number, number]>>;
 }
@@ -47,4 +49,5 @@ export interface ExtractHtmlOptions {
   html: string;
   inputRoot: string;
   baseUrl: string;
+  urlMode?: UrlMode;
 }

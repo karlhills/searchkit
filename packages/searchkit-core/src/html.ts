@@ -37,7 +37,7 @@ function filenameFallback(filePath: string): string {
 }
 
 export function extractDocumentFromHtml(options: ExtractHtmlOptions): ExtractedDocument | null {
-  const { filePath, html, inputRoot, baseUrl } = options;
+  const { filePath, html, inputRoot, baseUrl, urlMode = "pretty" } = options;
   const $ = load(html);
 
   const contentRoot = $("main").first().length
@@ -83,7 +83,7 @@ export function extractDocumentFromHtml(options: ExtractHtmlOptions): ExtractedD
   }
 
   return {
-    url: mapHtmlFileToUrl(filePath, inputRoot, baseUrl),
+    url: mapHtmlFileToUrl(filePath, inputRoot, baseUrl, urlMode),
     title,
     headings,
     bodyText,

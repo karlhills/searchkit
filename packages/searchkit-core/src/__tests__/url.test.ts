@@ -31,4 +31,13 @@ describe("mapHtmlFileToUrl", () => {
       )
     ).toBe("/docs/matchforge/");
   });
+
+  it("supports html URL mode for hosts without pretty URL rewriting", () => {
+    const inputRoot = "/tmp/dist";
+    expect(mapHtmlFileToUrl("/tmp/dist/index.html", inputRoot, "/", "html")).toBe("/index.html");
+    expect(mapHtmlFileToUrl("/tmp/dist/about.html", inputRoot, "/", "html")).toBe("/about.html");
+    expect(mapHtmlFileToUrl("/tmp/dist/guide/intro/index.html", inputRoot, "/", "html")).toBe(
+      "/guide/intro/index.html"
+    );
+  });
 });

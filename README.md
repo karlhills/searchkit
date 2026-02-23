@@ -37,7 +37,11 @@ Optional:
 
 - `--include "**/*.html"`
 - `--exclude "**/search/**"`
+- `--urlMode pretty|html` (default: `pretty`)
 - `--verbose`
+
+Use `--urlMode html` if your host does not support extensionless pretty URLs. This emits links like
+`/about.html` and `/guide/intro/index.html` instead of `/about` and `/guide/intro/`.
 
 ## Widget usage (drop-in)
 
