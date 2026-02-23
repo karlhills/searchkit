@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Search Kit</title>
+  </head>
+  <body>
+    <main>
+      <h1>About Search Kit</h1>
+      <p>
+        Search Kit is a lightweight static-site search toolkit. It includes a build-time CLI, a
+        headless browser client, and a drop-in modal widget.
+      </p>
+
+      <h2>Components</h2>
+      <p>
+        The CLI writes <code>index.meta.json</code>, <code>docs.json</code>, and
+        <code>index.inv.json</code>.
+      </p>
+      <h3>Client library</h3>
+      <p>
+        The client fetches JSON files and provides weighted term matching with basic highlighting.
+      </p>
+    </main>
+
+    <script src="/assets/searchkit-widget.global.js"></script>
+    <script>
+      SearchKitWidget.mountSearchWidget(document.body, {
+        metaUrl: "/search/index.meta.json"
+      });
+    </script>
+  </body>
+</html>

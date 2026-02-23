@@ -1,0 +1,16 @@
+{
+  "name": "examples-vanilla",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "dev": "pnpm run build && vite --config vite.config.ts --host"
+  },
+  "dependencies": {
+    "@searchkit/widget": "workspace:*"
+  },
+  "devDependencies": {
+    "searchkit": "workspace:*",
+    "vite": "^6.2.0"
+  }
+}

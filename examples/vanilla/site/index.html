@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Kit Vanilla Example</title>
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          -apple-system,
+          sans-serif;
+        line-height: 1.5;
+        color: #0f172a;
+      }
+      header,
+      main,
+      footer {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+      nav a {
+        margin-right: 0.75rem;
+      }
+      code {
+        background: #f1f5f9;
+        border-radius: 4px;
+        padding: 0.1rem 0.3rem;
+      }
+      .hint {
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        padding: 0.75rem;
+      }
+      .no-search {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Search Kit Example</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/guide/intro/">Guide Intro</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+
+    <main>
+      <p class="hint">Press <code>Cmd+K</code> or <code>/</code> to open Search Kit.</p>
+
+      <h2>Getting Started</h2>
+      <p>
+        Search Kit builds an inverted index at build time and keeps browser-side searching fast
+        without shipping your full site HTML to the client.
+      </p>
+
+      <h2>Build Integration</h2>
+      <p>
+        Use the command
+        <code>searchkit build --input ./dist --output ./dist/search --baseUrl /</code>
+        in your static site build pipeline.
+      </p>
+
+      <aside data-search-exclude>
+        This block is excluded from indexing because it has data-search-exclude.
+      </aside>
+
+      <p class="no-search">Hidden text with no-search class should not be indexed.</p>
+    </main>
+
+    <footer>
+      <small>Search Kit OSS MVP</small>
+    </footer>
+
+    <script src="/assets/searchkit-widget.global.js"></script>
+    <script>
+      SearchKitWidget.mountSearchWidget(document.body, {
+        metaUrl: "/search/index.meta.json",
+        placeholder: "Search docs..."
+      });
+    </script>
+  </body>
+</html>

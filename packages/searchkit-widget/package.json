@@ -1,0 +1,26 @@
+{
+  "name": "@searchkit/widget",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format esm,cjs,iife --global-name SearchKitWidget --target es2020 --clean --out-dir dist && cp src/styles.css dist/styles.css",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@searchkit/client": "workspace:*"
+  }
+}

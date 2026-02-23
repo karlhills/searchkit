@@ -1,0 +1,21 @@
+{
+  "name": "searchkit",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "main": "dist/cli.js",
+  "bin": {
+    "searchkit": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/cli.ts --format cjs --target node18 --clean --out-dir dist",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@searchkit/core": "workspace:*",
+    "commander": "^13.1.0",
+    "fast-glob": "^3.3.3"
+  }
+}

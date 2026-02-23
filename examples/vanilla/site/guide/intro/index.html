@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guide Intro</title>
+  </head>
+  <body>
+    <main>
+      <h1>Guide Introduction</h1>
+      <p>
+        This page explains indexing, tokenization, and scoring. Tokens in titles receive the highest
+        weight, headings receive medium weight, and body tokens receive base weight.
+      </p>
+
+      <h2>Tokenization</h2>
+      <p>
+        Search Kit lowercases text, splits on non-alphanumeric characters, keeps only letters and
+        numbers, drops short tokens, and removes common stopwords.
+      </p>
+
+      <h2>Scoring</h2>
+      <p>
+        Title matches add five points. Heading matches add three points. Body matches add one point.
+        A small bonus is applied when multiple query terms match the same document.
+      </p>
+    </main>
+
+    <script src="/assets/searchkit-widget.global.js"></script>
+    <script>
+      SearchKitWidget.mountSearchWidget(document.body, {
+        metaUrl: "/search/index.meta.json"
+      });
+    </script>
+  </body>
+</html>
