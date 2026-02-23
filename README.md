@@ -73,6 +73,22 @@ Browser/global usage:
 </script>
 ```
 
+Open widget via a button:
+
+```html
+<button id="open-search" type="button">Search</button>
+<script src="/assets/searchkit-widget.global.js"></script>
+<script>
+  const widget = SearchKitWidget.mountSearchWidget(document.body, {
+    metaUrl: "/search/index.meta.json"
+  });
+
+  document.getElementById("open-search")?.addEventListener("click", () => {
+    widget.open();
+  });
+</script>
+```
+
 ### `mountSearchWidget` API
 
 ```ts
