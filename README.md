@@ -1,6 +1,6 @@
 # Search Kit
 
-Search Kit is an OSS MVP for static-site search:
+Search Kit is an OSS toolkit for static-site search:
 
 - `searchkit` CLI builds a compact JSON index during your build.
 - `@searchkit/client` is a headless browser search engine.
@@ -30,15 +30,20 @@ Generated files:
 ### CLI options
 
 ```bash
-searchkit build --input <dir> --output <dir> --baseUrl /
+searchkit build --input <dir> --output <dir> [options]
 ```
 
-Optional:
+- `--input <dir>` (required): input HTML directory (for example `./dist`)
+- `--output <dir>` (required): output directory for search files (for example `./dist/search`)
+- `--baseUrl <url>` (default: `/`): site base path
+- `--urlMode <mode>` (default: `pretty`): `pretty | html`
+- `--include <glob>` (default: `"**/*.html"`): included files glob
+- `--exclude <glob>` (default: `"**/search/**"`): excluded files glob
+- `--verbose` (default: `false`): print skipped files
+- `-h, --help`: show command help
+- `-V, --version`: show CLI version
 
-- `--include "**/*.html"`
-- `--exclude "**/search/**"`
-- `--urlMode pretty|html` (default: `pretty`)
-- `--verbose`
+`baseUrl` can be a path (`/`, `/docs/`) or a full URL (`https://example.com/docs/`); full URLs are normalized to their pathname.
 
 Use `--urlMode html` if your host does not support extensionless pretty URLs. This emits links like
 `/about.html` and `/guide/intro/index.html` instead of `/about` and `/guide/intro/`.
@@ -56,20 +61,39 @@ Use in browser:
 ```html
 <script src="/assets/searchkit-widget.global.js"></script>
 <script>
-  SearchKitWidget.mountSearchWidget(document.body, {
+  const widget = SearchKitWidget.mountSearchWidget(document.body, {
     metaUrl: "/search/index.meta.json",
     placeholder: "Search docs..."
   });
 </script>
 ```
 
-Options:
+### `mountSearchWidget` API
 
-- `metaUrl`
-- `placeholder`
-- `hotkeys` (defaults to `Meta+K` and `/`)
-- `maxResults`
-- `theme` via CSS variable values
+```ts
+mountSearchWidget(containerOrSelector?, options?)
+```
+
+- `containerOrSelector` (optional): `string | Element` (default: `document.body`)
+- `options.metaUrl` (default: `"/search/index.meta.json"`): URL to index meta
+- `options.placeholder` (default: `"Search docs..."`): input placeholder
+- `options.hotkeys` (default: `["Meta+K", "/"]`): hotkeys that open modal
+- `options.maxResults` (default: `8`): max results rendered
+- `options.theme` (optional): color overrides
+- `options.theme.bg`
+- `options.theme.fg`
+- `options.theme.border`
+- `options.theme.shadow`
+- `options.theme.accent`
+- `options.theme.muted`
+
+Return value:
+
+- `handle.open()`: open modal programmatically
+- `handle.close()`: close modal programmatically
+- `handle.destroy()`: unmount widget and listeners
+
+The widget footer includes a built-in "Powered by SearchKit" link to `https://github.com/karlhills/searchkit`.
 
 Theme variables:
 
@@ -89,6 +113,18 @@ const engine = await createSearch({ metaUrl: "/search/index.meta.json" });
 const results = await engine.query("hello world", { limit: 10, highlight: true });
 ```
 
+### `createSearch` API
+
+- `createSearch({ metaUrl, fetcher? })`
+- `metaUrl` (required): URL to `index.meta.json`
+- `fetcher` (optional): custom fetch implementation
+
+### `engine.query` options
+
+- `query(text, { limit?, highlight? })`
+- `limit` (default: `10`)
+- `highlight` (default: `false`) wraps excerpt token matches with `<mark>`
+
 Result shape:
 
 ```ts
@@ -97,7 +133,7 @@ Result shape:
 }
 ```
 
-## Index format (MVP)
+## Index format
 
 `index.meta.json`
 
